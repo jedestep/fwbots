@@ -33,3 +33,21 @@ class KillableThread(threading.Thread):
 
     def raise_exc(self, exctype):
         async_raise(self._get_my_tid(), exctype)
+
+"""TODO what is wrong with this?
+class KillableTimer(threading.Timer):
+    def _get_my_tid(self):
+        if not self.isAlive():
+            raise threading.ThreadError("Attempted to fetch tid for an inactive thread")
+
+        if hasattr(self, "_thread_id"):
+            return self._thread_id
+
+        for tid, tobj in threading._active.items():
+            if tobj is self:
+                self._thread_id = tid
+                return tid
+
+    def raise_exc(self, exctype):
+        async_raise(self._get_my_tid(), exctype)
+"""

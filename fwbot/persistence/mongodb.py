@@ -21,10 +21,8 @@ class MongoDBPersister(object):
         self.dbname=dbname
 
         self.fwdb = MongoClient(conn_url)[dbname]
-        self.access_collection = self.fwdb['access']
-        self.jobs_collection = self.fwdb['jobs']
         self.worker_collection = self.fwdb['workers']
-        self.result_collection = self.fwdb['result']
+        self.pool_collection = self.fwdb['pool']
         
     ### Basic information ###
 
@@ -36,6 +34,26 @@ class MongoDBPersister(object):
 
     def get_version(self):
         return self.fwdb.command({'buildInfo': 1})['version']
+
+    ### Pool manipulation ###
+
+    def add_pool(self,pool):
+        obj = {
+            'name':pool.name,
+            'manual':pool.manual.keys(),
+            'auto':pool.auto.keys(),
+            'insta':pool.insta.keys()
+        }
+        self.pool_collection.insert(obj)
+
+    def get_all_pools(self):
+        res = {}
+        for p in self.pool_collection.find():
+            res[p['name']] = p
+        return res
+
+    def delete_pool(self,name):
+        self.pool_collection.remove({'name':name})
 
     ### Worker manipulation ###
 

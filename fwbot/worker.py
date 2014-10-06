@@ -3,7 +3,7 @@ from persistence import get_backend
 from util.log import Logger
 from util.thread import KillableThread, TriggeredInterrupt
 
-from account import get_twitter_account,TwitterAccount
+from account import get_twitter_account,get_instagram_account
 from ircbot import IrcListener
 
 from time import sleep
@@ -80,6 +80,7 @@ class WorkerPool(object):
         self.workers = {}
         self.manual = {}
         self.auto = {}
+        self.insta = {}
 
         if pidfile:
             self.log.info("writing to pidfile %s" % pidfile)
@@ -93,12 +94,23 @@ class WorkerPool(object):
         self.ircbot = IrcListener(self,"#fwbots",self.name,"irc.freenode.net")
 
         for key in routing_keys:
-            acc = get_twitter_account(key)
-            if acc.ty == 'auto':
-                self.auto[acc.name] = acc
-            # if there are multiple manual accs defined, pick only the last one
-            elif acc.ty == 'manual':
-                self.manual[acc.name] = acc
+            errnum = 0
+            try:
+                acc = get_twitter_account(key)
+                if acc.ty == 'auto':
+                    self.auto[acc.name] = acc
+                # if there are multiple manual accs defined, pick only the last one
+                elif acc.ty == 'manual':
+                    self.manual[acc.name] = acc
+            except NameError:
+                errnum += 1
+            try:
+                acc = get_instagram_account(key)
+                self.insta[acc.name] = acc
+            except NameError:
+                errnum += 1
+            if errnum > 1:
+                self.log.warn("Could not find any account called %s"%key)
 
             if key not in wnums:
                 wnums[key] = 0
@@ -109,6 +121,8 @@ class WorkerPool(object):
             thread = KillableThread(target=worker.start_worker)
             thread.start()
             self.workers[worker.worker_id] = (worker, thread)
+        # lastly, register yourself
+        self.persister.add_pool(self)
 
     def __enter__(self, *args, **kwargs):
         self.log.info("starting")
@@ -137,6 +151,7 @@ class WorkerPool(object):
             worker[0].stop_worker()
             del self.workers[_id]
         self.stop = True
+        self.persister.delete_pool(self.name)
 
     def die(self):
         for _id in self.workers.keys():

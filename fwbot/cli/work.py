@@ -2,7 +2,6 @@ from base_subapp import Subapp
 from worker import WorkerPool
 
 import os
-import sys
 
 def get_subapp():
     class WorkSubapp(Subapp):

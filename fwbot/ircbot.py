@@ -44,6 +44,8 @@ class IrcListener(irc.bot.SingleServerIRCBot):
         cmdname = cmd[0]
         cmdargs = cmd[1:]
         executed = False
+
+        ### Twitter ###
         if cmdname == 'tweet': # tweet
             acc = cmdargs[0]
             msg = ' '.join(cmdargs[1:])
@@ -55,20 +57,48 @@ class IrcListener(irc.bot.SingleServerIRCBot):
                 except ValueError:
                     self.msg_channel(c,'could not find account %s' % acc)
             executed = True
+
         if cmdname == 'fbranch': # friend branch
             acc = cmdargs[0]
-            self._exec(lambda:self.wpool.manual[acc].friend_branch(),c,acc)
+            if acc in self.wpool.manual:
+                self._exec(lambda:self.wpool.manual[acc].friend_branch(),c,acc)
+            elif acc in self.wpool.auto:
+                self._exec(lambda:self.wpool.auto[acc].friend_branch(),c,acc)
             executed = True
+
         if cmdname == 'copycat': # copycat tweet
             acc = cmdargs[0]
             if len(cmdargs) > 1:
-                self._exec(lambda:self.wpool.auto[acc].copycat(self.wpool.manual[cmdargs[1]]),c,acc)
+                self._exec(lambda:self.wpool.auto[acc].copycat_tweet(self.wpool.manual[cmdargs[1]]),c,acc)
             else:
-                self._exec(lambda:self.wpool.auto[acc].copycat(random.choice(self.wpool.manual.values())),c,acc)
+                self._exec(lambda:self.wpool.auto[acc].copycat_tweet(random.choice(self.wpool.manual.values())),c,acc)
             executed = True
+
         if cmdname == 'rtl': # retweet last
             acc = cmdargs[0]
-            self._exec(lambda:self.wpool.auto[acc].retweet_last(random.choice(self.wpool.manual.values())),c,acc)
+            self._exec(lambda:self.wpool.auto[acc].retweet_last(random.choice(self.wpool.manual.values()).name),c,acc)
+            executed = True
+
+        ### Instagram ###
+        if cmdname == 'follow': # follow
+            acc = cmdargs[0]
+            target = cmdargs[1]
+            self._exec(lambda:self.wpool.insta[acc].follow(target))
+            executed = True
+
+        if cmdname == 'folbranch': # follow
+            acc = cmdargs[0]
+            self._exec(lambda:self.wpool.insta[acc].follow_branch(),c,acc)
+            executed = True
+
+        if cmdname == 'dolikes': # like popular stuff
+            acc = cmdargs[0]
+            self._exec(lambda:self.wpool.insta[acc].like_popular(),c,acc)
+            executed = True
+
+        if cmdname == 'likefriend': # likes a friend's post
+            acc = cmdargs[0]
+            self._exec(lambda:self.wpool.insta[acc].like_friend(),c,acc)
             executed = True
 
         if executed:
