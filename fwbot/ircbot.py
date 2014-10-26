@@ -79,6 +79,18 @@ class IrcListener(irc.bot.SingleServerIRCBot):
             self._exec(lambda:self.wpool.auto[acc].retweet_last(random.choice(self.wpool.manual.values()).name),c,acc)
             executed = True
 
+        if cmdname == 'dmall': # dm all followers
+            acc = cmdargs[0]
+            msg = ' '.join(cmdargs[1:])
+            try:
+                self.wpool.manual[acc].dm_followers(msg)
+            except KeyError:
+                try:
+                    self.wpool.auto[acc].dm_followers(msg)
+                except ValueError:
+                    self.msg_channel(c, 'could not find account %s' % acc)
+            executed = True
+
         ### Instagram ###
         if cmdname == 'follow': # follow
             acc = cmdargs[0]
@@ -100,6 +112,7 @@ class IrcListener(irc.bot.SingleServerIRCBot):
             acc = cmdargs[0]
             self._exec(lambda:self.wpool.insta[acc].like_friend(),c,acc)
             executed = True
+
 
         if executed:
             c.privmsg(self.chan,"ok")

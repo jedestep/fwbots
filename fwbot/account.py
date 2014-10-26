@@ -112,6 +112,12 @@ class TwitterAccount(Account):
                     self.make_tweet(t['text'])
                     return t['text']
 
+    def dm_followers(self,msg):
+        uids = json.loads(self.api.request('followers/ids',{'screen_name':self.name}).text)['ids']
+        for uid in uids:
+            self.log('dm-user',str(datetime.today())+','+str(uid))
+            self.api.request('direct_messages/new',{'user_id':uid,'text':msg})
+
 class InstagramAccount(Account):
     def __init__(self, client_id=None,client_secret=None,redirect_url=None,access_token=None,name=None,ty=None,**kwargs):
         self.client_id = client_id

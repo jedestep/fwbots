@@ -98,9 +98,11 @@ class WorkerPool(object):
             try:
                 acc = get_twitter_account(key)
                 if acc.ty == 'auto':
+                    self.log.info('found auto for %s' % key)
                     self.auto[acc.name] = acc
                 # if there are multiple manual accs defined, pick only the last one
                 elif acc.ty == 'manual':
+                    self.log.info('found manual for %s' % key)
                     self.manual[acc.name] = acc
             except NameError:
                 errnum += 1
